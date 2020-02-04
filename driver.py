@@ -151,9 +151,9 @@ def find_start(driver):
     game_start = match(elem_start)
     game_end = match(elem_end)
     yt_start = (game_start / PIXELS) * video_length
-    yt_end = (game_end / PIXELS) * video_length
+    # yt_end = (game_end / PIXELS) * video_length
     driver.execute_script(f'document.getElementsByTagName("video")[0].currentTime={yt_start}')
-    return int(yt_end)
+    return video_length
 
 
 def dump(data, game_time, file):
@@ -195,7 +195,6 @@ def parse(driver, yt_end, file_name):
         game_start = convert_time(game_start)
         if mid_start != 0:
             driver.execute_script(f'document.getElementsByTagName("video")[0].currentTime={game_start + mid_start - 4}')
-        game_end = yt_end - game_start + 30
         print(f'Game: {file_name} is beginning. Parsing starting now... ')
 
         # start the parse
@@ -210,7 +209,7 @@ def parse(driver, yt_end, file_name):
             game_time = int(current_time - game_start)
 
             # check if game is over
-            if game_time > game_end:
+            if current_time >= (yt_end - 5):
                 game = False
 
             if game_time % 5 == 0:
@@ -237,11 +236,11 @@ def parse(driver, yt_end, file_name):
 
                 dump(stats5, game_time, file_name)
 
-                completed = int((game_time / game_end) * BAR_LENGTH)
+                completed = int((current_time / yt_end) * BAR_LENGTH)
                 bar = '[' + ('#' * completed) + ('.' * (BAR_LENGTH - completed)) + ']'
-                time_left = int((game_end - game_time) * 2.2)
+                time_left = int((yt_end - current_time) * 2.2)
                 time_left = str(datetime.timedelta(seconds=time_left))
-                print(f'Progress: {game_time} / {game_end} | {bar} || Approx. time left: {time_left}.')
+                print(f'Progress: {current_time} / {yt_end} | {bar} || Approx. time left: {time_left}.')
                 driver.find_element_by_tag_name('body').send_keys(Keys.SPACE)
                 time.sleep(1)
     except ValueError as e:

@@ -30,10 +30,15 @@ except:
     frame = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "znipe-iframe")))
     driver.switch_to.frame(frame)
 
+driver.find_element_by_css_selector("div[class^='RiotVODs']").click()
 time.sleep(1)
-WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//span[@class='OptionsMenu__Text-h4phwe-4 dDkXYG' and text()='LCS Summer 2019']"))).click()
+WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//span[contains(text(),'LCS Summer 2019')]"))).click()
 time.sleep(1)
-WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//div[@class='RiotVODs__SelectedLanguageLabel-sc-1ya9m5e-1 eNlqpi' and text()='LCS Summer 2019']"))).click()
+driver.find_element_by_css_selector("div[class^='RiotVODs']").click()
+# time.sleep(1)
+# WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//span[@class='OptionsMenu__Text-h4phwe-4 dDkXYG' and text()='LCS Summer 2019']"))).click()
+# time.sleep(1)
+# WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//div[@class='RiotVODs__SelectedLanguageLabel-sc-1ya9m5e-1 eNlqpi' and text()='LCS Summer 2019']"))).click()
 
 SCROLL_PAUSE_TIME = 1
 
