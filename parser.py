@@ -1,61 +1,75 @@
-import numpy as np
+import time
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+import json
+from test import parse
 
-titles = ['Game Time', 'Name', 'Champ', 'Role', 'Kills', 'Deaths', 'Assists', 'Gold Earned', 'CS',
-          'Kill Participation', 'Champ Damage Share', 'Wards Placed', 'Wards Destroyed', 'Attack Damage',
-          'Ability Power', 'Critical Chance', 'Attack Speed', 'Life Steal', 'Armor', 'Magic Resist', 'Tenacity',
-          'Dragons', 'Inhibitors', 'Barons', 'Towers']
+class Watcher:
+    DIRECTORY_TO_WATCH = "/Users/davidjamrog/PycharmProjects/LoL/data"
 
-def parse_text(payload, game_time):
-    #TODO parse dragons, towers, etc.
-    values = [0] * len(titles)
-    values[0] = game_time
-    for n in range(len(payload)):
-        if n == 0:
-            name, champ_role, _ = payload[n].text.split('\n')
-            team = name.split(' ')[0]
-            champ, role = champ_role.split('–')
-            values[1] = name
-            values[2] = champ
-            values[3] = role
-        elif n == 1:
-            stat_split = payload[n].text.split('\n')
-            kill, death, assist = stat_split.pop(0).split(' / ')
-            values[4] = kill
-            values[5] = death
-            values[6] = assist
-            enter = 0
-            for index, stat in enumerate(stat_split):
-                if index % 2 != 0:
-                    values[enter + 7] = stat
-                    enter +=1
-        elif n == 2:
-            attr_split = payload[n].text.split('\n')
-            enter = 0
-            for index, stat in enumerate(attr_split):
-                if index % 2 == 0:
-                    values[enter + 13] = stat
-                    enter +=1
-    return titles, values, team
+    def __init__(self):
+        self.observer = Observer()
+        self.file = ''
+
+    def run(self):
+        event_handler = Handler()
+        self.observer.schedule(event_handler, self.DIRECTORY_TO_WATCH, recursive=True)
+        self.observer.start()
+        self.file = event_handler.on_any_event
+
+        print('Watching for new game files...')
+        try:
+            while True:
+                time.sleep(5)
+        except:
+            self.observer.stop()
+            print("Error")
+
+        self.observer.join()
 
 
-def parse_team(team_stats, dragons, game_time, blue_team, red_team):
-    blue_team_values = [0] * len(titles)
-    blue_team_values[0] = game_time
-    blue_team_values[1] = blue_team
-    red_team_values = [0] * len(titles)
-    red_team_values[0] = game_time
-    red_team_values[1] = red_team
-    all_dragon = dragons.split('DRAGONS')
-    blue_drag, red_drag = all_dragon[0].count("dragon "), all_dragon[1].count("dragon ")
-    blue_team_values[-4] = blue_drag
-    red_team_values[-4] = red_drag
-    input = team_stats[0].text.split('\n')[4:]
+class Handler(FileSystemEventHandler):
+    @staticmethod
+    def on_any_event(event):
+        game = {}
 
-    for n in range(1, 3):
-        blue_team_values[-n]: input[n+3]
+        if event.is_directory:
+            return None
+
+        elif event.event_type == 'created':
+            # Take any action here when a file is first created.
+            directory = event.src_path.split('/')
+            directory = directory[-2]
+            # first time started
+            if game_file == '':
+                game_file = directory
+                try:
+                    with open(f'data/{directory}/game.txt', 'r') as f:
+                        game = json.load(f)
+                except:
+                    game = {'event': {}, 'data': {}}
+
+            # switch games
+            elif directory != game_file:
+                with open(f'data/{directory}/game.txt', 'w') as file_out:
+                    json.dump(game, file_out)
+                    print('Saved parsed file')
+                    game = {'event': {}, 'data': {}}
+                    game_file = directory
+
+            # a file from the parser
+            if 'game.txt' not in event.src_path:
+                with open(f'{event.src_path}', 'r') as file_in:
+                    parse_data = json.load(file_in)
+
+                    time, blue_team, red_team = parse(parse_data)
+                    game['data'][time] = {}
+                    game['data'][time] = {}
+                    game['data'][time]['blue team'] = blue_team
+                    game['data'][time]['red team'] = red_team
+                    print(f'Parsed: Game @ {time} time.')
 
 
-    for n in range(1, 3):
-        red_team_values[-n]: input[n+5]
-
-    return red_team_values, blue_team_values
+if __name__ == '__main__':
+    w = Watcher()
+    w.run()
