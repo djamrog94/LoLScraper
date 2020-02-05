@@ -17,12 +17,10 @@ PIXELS = WINDOW_WIDTH * (1875 / 1920)
 SCROLL_PAUSE_TIME = 0.5
 
 
-def main():
-
-
+def main(variance):
     # find games
     with open('bt.txt', 'r') as f:
-        last_game = int(f.readline())
+        last_game = int(f.readline()) + variance
     # parse all remaining games
     while True:
         driver = init()
@@ -35,9 +33,8 @@ def main():
         game_link.click()
         yt_end = find_start(driver)
         parse(driver, yt_end, file_name)
-        print(f'Finished parsing: {file_name}.')
-        last_game += 1
-
+        print(f'\nFinished parsing: {file_name}.')
+        last_game += 3
 
 
 def init():
@@ -119,11 +116,7 @@ def find_game(driver):
         week_games = week.find_elements_by_class_name('riot-match-item')
         for game in week_games:
             games.insert(0, [x, game])
-    if last_game == 0:
-        return games
-    else:
-        games = games[:-last_game]
-        return games
+    return games
 
 
 def start_game(driver, game):
@@ -240,7 +233,7 @@ def parse(driver, yt_end, file_name):
                 bar = '[' + ('#' * completed) + ('.' * (BAR_LENGTH - completed)) + ']'
                 time_left = int((yt_end - current_time) * 2.2)
                 time_left = str(datetime.timedelta(seconds=time_left))
-                print(f'Progress: {current_time} / {yt_end} | {bar} || Approx. time left: {time_left}.')
+                print(f'Progress: {game_time}; {current_time} / {yt_end} | {bar} || Approx. time left: {time_left}.', end='\r')
                 driver.find_element_by_tag_name('body').send_keys(Keys.SPACE)
                 time.sleep(1)
     except ValueError as e:
