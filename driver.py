@@ -14,12 +14,12 @@ BAR_LENGTH = 50
 WINDOW_WIDTH = 1400
 WINDOW_HEIGHT = 1080
 PIXELS = WINDOW_WIDTH * (1875 / 1920)
-SCROLL_PAUSE_TIME = 0.5
+SCROLL_PAUSE_TIME = 1
 
 
 def main(variance):
     # find games
-    with open('bt.txt', 'r') as f:
+    with open('bts.txt', 'r') as f:
         last_game = int(f.readline()) + variance
     # parse all remaining games
     while True:
@@ -86,11 +86,24 @@ def navigate(driver):
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "title-text"))).click()
     time.sleep(2)
     WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "proViewVods"))).click()
-    frame = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "znipe-iframe")))
-    driver.switch_to.frame(frame)
-    time.sleep(4)
-    # Get scroll height
+    while True:
+        try:
+            time.sleep(5)
+            frame = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "znipe-iframe")))
+            driver.switch_to.frame(frame)
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "div[class^='RiotVODs']"))).click()
+            time.sleep(1)
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, "//span[contains(text(),'LCS Summer 2019')]"))).click()
+            time.sleep(1)
+            driver.find_element_by_css_selector("div[class^='RiotVODs']").click()
+            break
+        except:
+            driver.refresh()
+
     last_height = driver.execute_script("return document.body.scrollHeight")
+
     while True:
         # Scroll down to bottom
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -101,13 +114,17 @@ def navigate(driver):
         # Calculate new scroll height and compare with last scroll height
         new_height = driver.execute_script("return document.body.scrollHeight")
         if new_height == last_height:
-            break
+            try:
+                WebDriverWait(driver, 5).until(EC.element_to_be_clickable(
+                    (By.XPATH, "//span[@class='ladda-label' and text()='Load more']"))).click()
+            except:
+                break
         last_height = new_height
 
 
 def find_game(driver):
     # find last game parsed
-    with open('bt.txt', 'r') as f:
+    with open('bts.txt', 'r') as f:
         last_game = int(f.readline())
     # find all games
     schedule = error_handle(driver)
@@ -242,9 +259,9 @@ def parse(driver, yt_end, file_name):
     finally:
         # if game completed
         if game is False:
-            with open('bt.txt', 'r') as f:
+            with open('bts.txt', 'r') as f:
                 last_game = int(f.readline())
-            with open('bt.txt', 'w') as f:
+            with open('bts.txt', 'w') as f:
                 f.write(str(last_game + 1))
             driver.quit()
 
