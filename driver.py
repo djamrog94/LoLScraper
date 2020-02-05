@@ -75,6 +75,7 @@ def error_handle(driver):
 
 
 def navigate(driver):
+    count = 0
     # login and navigate to VOD page
     driver.get('https://watch.lolesports.com')
     WebDriverWait(driver, 10).until(
@@ -86,7 +87,7 @@ def navigate(driver):
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "title-text"))).click()
     time.sleep(2)
     WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "proViewVods"))).click()
-    while True:
+    while count < 3:
         try:
             time.sleep(5)
             frame = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "znipe-iframe")))
@@ -100,6 +101,7 @@ def navigate(driver):
             driver.find_element_by_css_selector("div[class^='RiotVODs']").click()
             break
         except:
+            count +=1
             driver.refresh()
 
     last_height = driver.execute_script("return document.body.scrollHeight")
@@ -159,9 +161,7 @@ def find_start(driver):
     _, vid_time = elem_video.split(' / ')
     video_length = convert_time(vid_time)
     game_start = match(elem_start)
-    game_end = match(elem_end)
     yt_start = (game_start / PIXELS) * video_length
-    # yt_end = (game_end / PIXELS) * video_length
     driver.execute_script(f'document.getElementsByTagName("video")[0].currentTime={yt_start}')
     return video_length
 
@@ -245,6 +245,8 @@ def parse(driver, yt_end, file_name):
                 stats5.append(red_dragons)
 
                 dump(stats5, game_time, file_name)
+                with open(f'data/{file_name}.game_info.txt', 'w') as f:
+                    f.write(f'{game_start},{yt_end}')
 
                 completed = int((current_time / yt_end) * BAR_LENGTH)
                 bar = '[' + ('#' * completed) + ('.' * (BAR_LENGTH - completed)) + ']'
@@ -255,6 +257,7 @@ def parse(driver, yt_end, file_name):
                 time.sleep(1)
     except ValueError as e:
         print(f'failed! {e}')
+        driver.quit()
 
     finally:
         # if game completed
