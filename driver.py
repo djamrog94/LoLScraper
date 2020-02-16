@@ -34,12 +34,13 @@ def main(variance):
         yt_end = find_start(driver)
         parse(driver, yt_end, file_name)
         print(f'\nFinished parsing: {file_name}.')
-        last_game += 3
+        last_game += 1
 
 
 def init():
     options = Options()
     options.add_argument("--autoplay-policy=no-user-gesture-required")
+
     options.add_argument(f"--window-size={WINDOW_WIDTH},{WINDOW_HEIGHT}")
     driver = webdriver.Chrome(options=options)
     return driver
@@ -92,13 +93,13 @@ def navigate(driver):
             time.sleep(5)
             frame = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "znipe-iframe")))
             driver.switch_to.frame(frame)
-            WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "div[class^='RiotVODs']"))).click()
-            time.sleep(1)
-            WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.XPATH, "//span[contains(text(),'LCS Summer 2019')]"))).click()
-            time.sleep(1)
-            driver.find_element_by_css_selector("div[class^='RiotVODs']").click()
+            # WebDriverWait(driver, 10).until(
+            #     EC.presence_of_element_located((By.CSS_SELECTOR, "div[class^='RiotVODs']"))).click()
+            # time.sleep(1)
+            # WebDriverWait(driver, 10).until(
+            #     EC.presence_of_element_located((By.XPATH, "//span[contains(text(),'LCS Summer 2019')]"))).click()
+            # time.sleep(1)
+            # driver.find_element_by_css_selector("div[class^='RiotVODs']").click()
             break
         except:
             count +=1
@@ -155,8 +156,6 @@ def start_game(driver, game):
 def find_start(driver):
     elem_start = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
         (By.XPATH, "//div[@class='game-action'][contains(text(),'GAME')]"))).get_attribute('outerHTML')
-    elem_end = driver.find_element_by_xpath("//div[@class='game-action'][contains(text(),'POST GAME')]") \
-        .get_attribute('outerHTML')
     elem_video = driver.find_element_by_css_selector("div[class^='Footerstyles__Timestamp']").get_attribute('innerHTML')
     _, vid_time = elem_video.split(' / ')
     video_length = convert_time(vid_time)
@@ -183,16 +182,16 @@ def parse(driver, yt_end, file_name):
     try:
         files = os.listdir(f'data/{file_name}')
         if len(files) != 0:
+            files.remove('game_info.txt')
             files = [int(x[:-4]) for x in files]
             mid_start = max(files)
     except:
         pass
-
     game = True
     try:
         # error handle
         while True:
-            players = WebDriverWait(driver, 5).until(EC.presence_of_all_elements_located(
+            players = WebDriverWait(driver, 45).until(EC.presence_of_all_elements_located(
                 (By.XPATH, "//div[@class='hero-selector__hero__name']")))
             heroes = driver.find_element_by_xpath("//div[@class='lol-stats-comparison__heros']").text
             test = heroes.split('\n')[2].split('-')
@@ -245,7 +244,7 @@ def parse(driver, yt_end, file_name):
                 stats5.append(red_dragons)
 
                 dump(stats5, game_time, file_name)
-                with open(f'data/{file_name}.game_info.txt', 'w') as f:
+                with open(f'data/{file_name}/game_info.txt', 'w') as f:
                     f.write(f'{game_start},{yt_end}')
 
                 completed = int((current_time / yt_end) * BAR_LENGTH)
@@ -270,4 +269,4 @@ def parse(driver, yt_end, file_name):
 
 
 if __name__ == '__main__':
-    main()
+    main(0)
