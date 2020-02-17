@@ -35,7 +35,7 @@ that can be run through a model
 History function takes in df from create dataset function and trains and saves a model
 
 
-#Live Game Data Collection / Analysis
+# Live Game Data Collection / Analysis
 
 Live_game program is live version of parser. Code has to be slightly changed,
  but fundamentally is the same
