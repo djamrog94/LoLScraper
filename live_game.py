@@ -18,9 +18,8 @@ def live_parse():
     driver.find_elements_by_tag_name("button")[1].click()
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "title-text"))).click()
     time.sleep(2)
-    # WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "proViewWatch"))).click()
-    WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "proViewVods"))).click()
-    time.sleep(10)
+    WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "proViewWatch"))).click()
+    # WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "proViewVods"))).click()
     frame = WebDriverWait(driver, 25).until(EC.presence_of_element_located((By.ID, "znipe-iframe")))
     driver.switch_to.frame(frame)
     game = True
@@ -43,7 +42,7 @@ def live_parse():
         game_start = time.time()
         print('\nGame starting!')
         count = 0
-        variance = 0
+        variance = 22
         # start the parse
         while game is True:
             stats5 = []

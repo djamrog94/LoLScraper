@@ -8,6 +8,7 @@ review = 0
 final = 0
 
 
+# function to convert the list containing 5 second data to df which will be appended to main game df
 def parse(input_data, path, file):
     blue_team = {}
     red_team = {}
@@ -105,7 +106,7 @@ def parse(input_data, path, file):
 
     return output, check
 
-
+# function that takes all the 5 second df made from parse function and creates full game df
 def create_game(path):
     global review
     global final
@@ -125,25 +126,30 @@ def create_game(path):
             except:
                 pass
 
+        # sorts game by time and player id
         game = game.sort_values(by=['Time', 'playerid'])
         game = game.reset_index()
         game.rename(columns={'index': 'Name'}, inplace=True)
 
+        # quick and dirty way to check if game over.
+        # assume that if game gold hasn't changed in over 10 seconds, game is over
         last = game.iloc[-1]['Gold']
         index = game.loc[game['Gold'] == last].index
         game = game[:index[0] + 1]
 
+        # if one of the 5 second df can't be formed; run repair function to fix broken times
         if a is True:
             game.to_excel(f'data/critical/{path}.xlsx', index=False)
             print(f'Saved to critical b/c missing data: {path}.')
             review += 1
 
+        # seems likely that game did not finish, must double check before moving to final folder
         elif len(index) < 2:
             game.to_excel(f'data/review/{path}.xlsx', index=False)
             print(f'Saved to review might be too short: {path}.')
             review += 1
 
-
+        # game sucessfully parsed; saved to final folder
         else:
             game.to_excel(f'data/final/{path}.xlsx', index=False)
             print(f'Saved to final: {path}.')
@@ -152,6 +158,8 @@ def create_game(path):
 
 
 def main():
+    # try creating games; printing success / failures
+    # only parses games that have not been parsed before
     fail = 0
     all_games = os.listdir(f'data')
     check = os.listdir(f'data/final')

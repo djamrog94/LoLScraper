@@ -10,6 +10,7 @@ def main():
 
 
 def repair_parse(driver, fix, yt_end, file_name):
+    # a lot of repeated code from driver function
     game = True
 
     try:
@@ -36,9 +37,9 @@ def repair_parse(driver, fix, yt_end, file_name):
             # start the parse"div[class^='Footerstyles__Timestamp']"
             while searching:
                 # calculate current game time
-                elem_video = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "div[class^='Footerstyles__Timestamp']"))).get_attribute('innerHTML')
-                # elem_video = driver.find_element_by_css_selector("div[class^='Footerstyles__Timestamp']").get_attribute(
-                #     'innerHTML')
+                elem_video = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, "div[class^='Footerstyles__Timestamp']"))).get_attribute('innerHTML')
+
                 current_time, _ = elem_video.split(' / ')
                 current_time = convert_time(current_time)
                 game_time = int(current_time - game_start)
@@ -92,6 +93,7 @@ def repair_parse(driver, fix, yt_end, file_name):
 
 
 def repair(path):
+    # opens up fix.txt file for game, repairs each 5 second block of data that is broken
     with open(f'data/{path}/fix.txt', 'r') as f:
         numbers = f.readlines()
         numbers = [int(x[:-5]) for x in numbers]

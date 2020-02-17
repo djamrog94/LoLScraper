@@ -13,13 +13,10 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 def main():
+    # navigate to betting page
     url = 'https://sports.betway.com/en/sports/lve/esports'
     driver = init()
     driver.get(url)
-    # WebDriverWait(driver, 10).until(EC.presence_of_element_located(
-    #     (By.CSS_SELECTOR, "div[class='dropdownSelectedOptionText']"))).click()
-    # WebDriverWait(driver, 10).until(EC.presence_of_element_located(
-    #     (By.CSS_SELECTOR, "div[collectionitem='OddsAmerican']"))).click()
     file_list = []
     models = {420: '420v2_model.joblib',
               480: '480v2_model.joblib',
@@ -66,6 +63,10 @@ def main():
                 if count > 5:
                     count = 0
             count += 1
+        print(f'Waiting{count * "."}', end='\r')
+        if count > 5:
+            count = 0
+        count += 1
         time.sleep(5)
 
 

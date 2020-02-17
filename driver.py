@@ -18,9 +18,10 @@ SCROLL_PAUSE_TIME = 1
 
 
 def main(variance):
-    # find games
+    # find index of next game from schedule.xlsx
     with open('bts.txt', 'r') as f:
         last_game = int(f.readline()) + variance
+
     # parse all remaining games
     while True:
         driver = init()
@@ -38,6 +39,7 @@ def main(variance):
 
 
 def init():
+    # create driver object
     options = Options()
     options.add_argument("--autoplay-policy=no-user-gesture-required")
 
@@ -47,6 +49,7 @@ def init():
 
 
 def convert_time(g_time):
+    # helper function to convert youtube time (str) to seconds (int)
     hours = 0
     try:
         hours, minutes, seconds = g_time.split(':')
@@ -57,6 +60,7 @@ def convert_time(g_time):
 
 
 def match(text):
+    # regex to help with parsing
     pattern = r'(?<=left:).*?px'
     m = re.search(pattern, text)
     output = m.group(0)[:-2].lstrip()
@@ -64,6 +68,7 @@ def match(text):
 
 
 def error_handle(driver):
+    # certain spots are known to cause program to crash. this function has program reload instead of crashing
     while True:
         try:
             value = WebDriverWait(driver, 7).until(EC.presence_of_all_elements_located(
@@ -77,6 +82,7 @@ def error_handle(driver):
 
 def navigate(driver):
     count = 0
+
     # login and navigate to VOD page
     driver.get('https://watch.lolesports.com')
     WebDriverWait(driver, 10).until(
@@ -93,6 +99,8 @@ def navigate(driver):
             time.sleep(5)
             frame = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "znipe-iframe")))
             driver.switch_to.frame(frame)
+            # The following code allows for parsing of summer 2019 games!!
+
             # WebDriverWait(driver, 10).until(
             #     EC.presence_of_element_located((By.CSS_SELECTOR, "div[class^='RiotVODs']"))).click()
             # time.sleep(1)
@@ -129,9 +137,12 @@ def find_game(driver):
     # find last game parsed
     with open('bts.txt', 'r') as f:
         last_game = int(f.readline())
+
     # find all games
     schedule = error_handle(driver)
     games = []
+
+    # create list from schedule.xlsx, last games coming first. returns this list
     for x, week in enumerate(schedule):
         week_games = week.find_elements_by_class_name('riot-match-item')
         for game in week_games:
@@ -140,6 +151,7 @@ def find_game(driver):
 
 
 def start_game(driver, game):
+    # attempts to create file name and returns selenium object of game link
     while True:
         try:
             schedule = error_handle(driver)
@@ -154,6 +166,7 @@ def start_game(driver, game):
 
 
 def find_start(driver):
+    # using pixel location of "game" tag, determine the starting time of game in seconds
     elem_start = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
         (By.XPATH, "//div[@class='game-action'][contains(text(),'GAME')]"))).get_attribute('outerHTML')
     elem_video = driver.find_element_by_css_selector("div[class^='Footerstyles__Timestamp']").get_attribute('innerHTML')
@@ -166,6 +179,7 @@ def find_start(driver):
 
 
 def dump(data, game_time, file):
+    # save the file as a list to text file in format (time in seconds)
     isdir = os.path.isdir(f'data/{file}')
     if isdir:
         pass
@@ -177,7 +191,7 @@ def dump(data, game_time, file):
 
 
 def parse(driver, yt_end, file_name):
-    # check if game is mid game
+    # check if game is mid game, if so pick up from when stopped
     mid_start = 0
     try:
         files = os.listdir(f'data/{file_name}')
@@ -198,10 +212,13 @@ def parse(driver, yt_end, file_name):
             if len(players) == 10 and len(test) == 2:
                 break
 
+        # find game start and convert to seconds, either start game or jump to mid start
         elem_video = driver.find_element_by_css_selector("div[class^='Footerstyles__Timestamp']").\
             get_attribute('innerHTML')
         game_start, _ = elem_video.split(' / ')
         game_start = convert_time(game_start)
+
+        # the 4 is arbitrary to help with edge cases causing time to not work properly
         if mid_start != 0:
             driver.execute_script(f'document.getElementsByTagName("video")[0].currentTime={game_start + mid_start - 4}')
         print(f'Game: {file_name} is beginning. Parsing starting now... ')
@@ -221,10 +238,11 @@ def parse(driver, yt_end, file_name):
             if current_time >= (yt_end - 5):
                 game = False
 
+            # every five seconds save data. must pause game before parse begins to ensure data quality
             if game_time % 5 == 0:
                 driver.find_element_by_tag_name('body').send_keys(Keys.SPACE)
                 stats5.append(game_time)
-            # 5 second data
+
                 for n in range(0, 10, 2):
                     players[n].click()
                     time.sleep(1)
@@ -243,10 +261,12 @@ def parse(driver, yt_end, file_name):
                 stats5.append(blue_dragons)
                 stats5.append(red_dragons)
 
+                # saves file to txt file, also creates another file including start and end time for QC
                 dump(stats5, game_time, file_name)
                 with open(f'data/{file_name}/game_info.txt', 'w') as f:
                     f.write(f'{game_start},{yt_end}')
 
+                # progress bar
                 completed = int((current_time / yt_end) * BAR_LENGTH)
                 bar = '[' + ('#' * completed) + ('.' * (BAR_LENGTH - completed)) + ']'
                 time_left = int((yt_end - current_time) * 2.2)
@@ -259,7 +279,7 @@ def parse(driver, yt_end, file_name):
         driver.quit()
 
     finally:
-        # if game completed
+        # if game completed updated index sheet to next game
         if game is False:
             with open('bts.txt', 'r') as f:
                 last_game = int(f.readline())

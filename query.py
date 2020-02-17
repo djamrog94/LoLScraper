@@ -3,6 +3,7 @@ import pandas as pd
 
 
 def api():
+    # this function gets game results from api. attaches results to schedule joined on "path"
     site = mwclient.Site('lol.gamepedia.com', path='/')
     page_to_query = "Data:LCS/2020 Season/Spring Season"
     response = site.api('cargoquery',

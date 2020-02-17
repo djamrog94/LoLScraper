@@ -119,6 +119,7 @@ def create_dataset2():
     all_games = [x[:-5] for x in all_games]
     intervals = {}
 
+    # creates empty dict that will house each df
     for i in range(7, 18):
         intervals[i * 60] = [dict(), list()]
 
@@ -214,6 +215,7 @@ def create_dataset2():
 
 
 def history_2():
+    # loads in each time df created in create dataset function
     df1 = pd.read_excel('420_df.xlsx')
     df2 = pd.read_excel('480_df.xlsx')
     df3 = pd.read_excel('540_df.xlsx')
@@ -227,6 +229,7 @@ def history_2():
 
     count = 420
 
+    # trains model for each df, and saves the model
     for df in [df1, df2, df3, df4, df5, df6, df7, df8, df9, df10]:
         train = pd.DataFrame()
         test = pd.DataFrame()
