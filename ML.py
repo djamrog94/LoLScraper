@@ -117,10 +117,13 @@ def create_live(df, time):
 def create_dataset2():
     all_games = os.listdir('data/final')
     all_games = [x[:-5] for x in all_games]
+    # df = pd.read_excel('420_df.xlsx')
+    # done = list(df['path'])
+    # games = (set(all_games) | set(done)) - (set(all_games) & set(done))
     intervals = {}
 
     # creates empty dict that will house each df
-    for i in range(7, 18):
+    for i in range(7, 28):
         intervals[i * 60] = [dict(), list()]
 
     for count, game in enumerate(all_games):
@@ -128,68 +131,71 @@ def create_dataset2():
 
         # for each minute within 7 - 17 minutes
         for interval in intervals:
-            # df for current time, plus a min ago and 3 min ago
-            player_df = df.loc[df['Time'] == interval]
-            player_df_1 = df.loc[df['Time'] == interval - 60]
-            player_df_3 = df.loc[df['Time'] == interval - 180]
-
-            # df for blue team, red team, and both sides players
-            blue = player_df[:5]
-            red = player_df[5:10]
-            blue1 = player_df_1[:5]
-            red1 = player_df_1[5:10]
-            blue3 = player_df_3[:5]
-            red3 = player_df_3[5:10]
-            blue_team = player_df.iloc[10]
-            red_team = player_df.iloc[11]
-
-            # dmg metric
-            blue_dmg = blue['CHAMPION DAMAGE'].sum() / (blue['CHAMPION DAMAGE'].sum() + red['MITIGATED DAMAGE'].sum())
-            red_dmg = red['CHAMPION DAMAGE'].sum() / (red['CHAMPION DAMAGE'].sum() + blue['MITIGATED DAMAGE'].sum())
-            dmg_metric = blue_dmg - red_dmg
-
-            # gold % change metric
-            blue_gold = blue['GOLD EARNED'].sum()
-            blue_gold1 = blue1['GOLD EARNED'].sum()
-            blue_gold3 = blue3['GOLD EARNED'].sum()
-
-            red_gold = red['GOLD EARNED'].sum()
-            red_gold1 = red1['GOLD EARNED'].sum()
-            red_gold3 = red3['GOLD EARNED'].sum()
-
             try:
-                b_cent_1 = (blue_gold - blue_gold1) / blue_gold1
-                b_cent_3 = (blue_gold - blue_gold3) / blue_gold3
+                # df for current time, plus a min ago and 3 min ago
+                player_df = df.loc[df['Time'] == interval]
+                player_df_1 = df.loc[df['Time'] == interval - 60]
+                player_df_3 = df.loc[df['Time'] == interval - 180]
 
+                # df for blue team, red team, and both sides players
+                blue = player_df[:5]
+                red = player_df[5:10]
+                blue1 = player_df_1[:5]
+                red1 = player_df_1[5:10]
+                blue3 = player_df_3[:5]
+                red3 = player_df_3[5:10]
+                blue_team = player_df.iloc[10]
+                red_team = player_df.iloc[11]
+
+                # dmg metric
+                blue_dmg = blue['CHAMPION DAMAGE'].sum() / (blue['CHAMPION DAMAGE'].sum() + red['MITIGATED DAMAGE'].sum())
+                red_dmg = red['CHAMPION DAMAGE'].sum() / (red['CHAMPION DAMAGE'].sum() + blue['MITIGATED DAMAGE'].sum())
+                dmg_metric = blue_dmg - red_dmg
+
+                # gold % change metric
+                blue_gold = blue['GOLD EARNED'].sum()
+                blue_gold1 = blue1['GOLD EARNED'].sum()
+                blue_gold3 = blue3['GOLD EARNED'].sum()
+
+                red_gold = red['GOLD EARNED'].sum()
+                red_gold1 = red1['GOLD EARNED'].sum()
+                red_gold3 = red3['GOLD EARNED'].sum()
+
+                try:
+                    b_cent_1 = (blue_gold - blue_gold1) / blue_gold1
+                    b_cent_3 = (blue_gold - blue_gold3) / blue_gold3
+
+                except:
+                    b_cent_1 = np.nan
+                    b_cent_3 = np.nan
+                try:
+                    r_cent_1 = (red_gold - red_gold1) / red_gold1
+                    r_cent_3 = (red_gold - red_gold3) / red_gold3
+                except:
+                    r_cent_1 = np.nan
+                    r_cent_3 = np.nan
+
+                cent_1 = b_cent_1 - r_cent_1
+                cent_3 = b_cent_3 - r_cent_3
+
+                # team metrics
+                baron = int(blue_team['Barons'].sum() - red_team['Barons'].sum())
+                inhib = int(blue_team['Inhibitors'].sum() - red_team['Inhibitors'].sum())
+                towers = int(blue_team['Towers'].sum() - red_team['Towers'].sum())
+                dragons = int(blue_team['Dragons'].sum() - red_team['Dragons'].sum())
+
+                # player metrics
+                vision = round(blue['VISION SCORE'].sum() - red['VISION SCORE'].sum(), 5)
+                cs = int(blue['MINION KILLS (CS)'].sum() - red['MINION KILLS (CS)'].sum())
+                gold = int(blue['GOLD EARNED'].sum() - red['GOLD EARNED'].sum())
+                kills = int(blue['K'].sum() - red['K'].sum())
+                assists = int(blue['A'].sum() - red['A'].sum())
+                intervals[interval][0].update({'path': game, 'vision': vision, 'cs': cs, 'kills': kills, 'assists': assists, 'gold': gold, 'damage': dmg_metric, 'cent_chg_1': cent_1, 'cent_chg_3': cent_3, 'baron': baron, 'inhib': inhib, 'towers': towers, 'dragons': dragons})
+                intervals[interval][1].append(intervals[interval][0])
+                intervals[interval][0] = {}
+                print(f'Dataframe being created: ({count} / {len(all_games) - 1})')
             except:
-                b_cent_1 = np.nan
-                b_cent_3 = np.nan
-            try:
-                r_cent_1 = (red_gold - red_gold1) / red_gold1
-                r_cent_3 = (red_gold - red_gold3) / red_gold3
-            except:
-                r_cent_1 = np.nan
-                r_cent_3 = np.nan
-
-            cent_1 = b_cent_1 - r_cent_1
-            cent_3 = b_cent_3 - r_cent_3
-
-            # team metrics
-            baron = int(blue_team['Barons'].sum() - red_team['Barons'].sum())
-            inhib = int(blue_team['Inhibitors'].sum() - red_team['Inhibitors'].sum())
-            towers = int(blue_team['Towers'].sum() - red_team['Towers'].sum())
-            dragons = int(blue_team['Dragons'].sum() - red_team['Dragons'].sum())
-
-            # player metrics
-            vision = round(blue['VISION SCORE'].sum() - red['VISION SCORE'].sum(), 5)
-            cs = int(blue['MINION KILLS (CS)'].sum() - red['MINION KILLS (CS)'].sum())
-            gold = int(blue['GOLD EARNED'].sum() - red['GOLD EARNED'].sum())
-            kills = int(blue['K'].sum() - red['K'].sum())
-            assists = int(blue['A'].sum() - red['A'].sum())
-            intervals[interval][0].update({'path': game, 'vision': vision, 'cs': cs, 'kills': kills, 'assists': assists, 'gold': gold, 'damage': dmg_metric, 'cent_chg_1': cent_1, 'cent_chg_3': cent_3, 'baron': baron, 'inhib': inhib, 'towers': towers, 'dragons': dragons})
-            intervals[interval][1].append(intervals[interval][0])
-            intervals[interval][0] = {}
-        print(f'Dataframe being created: ({count} / {len(all_games) - 1})')
+                print(f'failed on {interval} | {game}')
 
     df1 = pd.DataFrame()
     df2 = pd.DataFrame()
@@ -201,8 +207,18 @@ def create_dataset2():
     df8 = pd.DataFrame()
     df9 = pd.DataFrame()
     df10 = pd.DataFrame()
+    df11 = pd.DataFrame()
+    df12 = pd.DataFrame()
+    df13 = pd.DataFrame()
+    df14 = pd.DataFrame()
+    df15 = pd.DataFrame()
+    df16 = pd.DataFrame()
+    df17 = pd.DataFrame()
+    df18 = pd.DataFrame()
+    df19 = pd.DataFrame()
+    df20 = pd.DataFrame()
 
-    dfs = [df1, df2, df3, df4, df5, df6, df7, df8, df9, df10]
+    dfs = [df1, df2, df3, df4, df5, df6, df7, df8, df9, df10, df11, df12, df13, df14, df15, df16, df17, df18, df19, df20]
     results = pd.read_excel('results.xlsx')
     results = results.set_index('path')
 
@@ -226,11 +242,21 @@ def history_2():
     df8 = pd.read_excel('840_df.xlsx')
     df9 = pd.read_excel('900_df.xlsx')
     df10 = pd.read_excel('960_df.xlsx')
+    df11 = pd.read_excel('1020_df.xlsx')
+    df12 = pd.read_excel('1080_df.xlsx')
+    df13 = pd.read_excel('1140_df.xlsx')
+    df14 = pd.read_excel('1200_df.xlsx')
+    df15 = pd.read_excel('1260_df.xlsx')
+    df16 = pd.read_excel('1320_df.xlsx')
+    df17 = pd.read_excel('1380_df.xlsx')
+    df18 = pd.read_excel('1440_df.xlsx')
+    df19 = pd.read_excel('1500_df.xlsx')
+    df20 = pd.read_excel('1560_df.xlsx')
 
     count = 420
 
     # trains model for each df, and saves the model
-    for df in [df1, df2, df3, df4, df5, df6, df7, df8, df9, df10]:
+    for df in [df1, df2, df3, df4, df5, df6, df7, df8, df9, df10, df11, df12, df13, df14, df15, df16, df17, df18, df19, df20]:
         train = pd.DataFrame()
         test = pd.DataFrame()
         df['Date'] = df.apply(sort, axis=1)
@@ -405,6 +431,7 @@ def history():
 # create_dataset()
 
 
-#
-# if __name__ == '__main__':
-#     history()
+
+if __name__ == '__main__':
+    create_dataset2()
+    history_2()

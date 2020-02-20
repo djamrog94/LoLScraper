@@ -27,7 +27,18 @@ def main():
               780: '780v2_model.joblib',
               840: '840v2_model.joblib',
               900: '900v2_model.joblib',
-              960: '960v2_model.joblib'}
+              960: '960v2_model.joblib',
+              1020: '1020v2_model.joblib',
+              1080: '1080v2_model.joblib',
+              1140: '1140v2_model.joblib',
+              1200: '1200v2_model.joblib',
+              1260: '1260v2_model.joblib',
+              1320: '1320v2_model.joblib',
+              1380: '1380v2_model.joblib',
+              1440: '1440v2_model.joblib',
+              1500: '1500v2_model.joblib',
+              1560: '1560v2_model.joblib',
+              }
 
     game = pd.DataFrame()
     count = 0
