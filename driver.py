@@ -16,6 +16,10 @@ WINDOW_HEIGHT = 1080
 PIXELS = WINDOW_WIDTH * (1875 / 1920)
 SCROLL_PAUSE_TIME = 1
 
+with open('cred.txt', 'r') as f:
+    user = f.readline().rstrip()
+    pw = f.readline().rstrip()
+
 
 def main(variance):
     # find index of next game from schedule.xlsx
@@ -88,8 +92,8 @@ def navigate(driver):
     WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH,
                                     "//a[@class='riotbar-anonymous-link riotbar-account-action']"))).click()
-    WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.NAME, "username"))).send_keys('jamfrog')
-    WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.NAME, "password"))).send_keys('Vohabdmj2')
+    WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.NAME, "username"))).send_keys(user)
+    WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.NAME, "password"))).send_keys(pw)
     driver.find_elements_by_tag_name("button")[1].click()
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "title-text"))).click()
     time.sleep(2)
