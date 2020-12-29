@@ -110,7 +110,6 @@ def parse(input_data, path, file):
 def create_game(path):
     global review
     global final
-    path = path
     files = os.listdir(f'data/{path}')
     game = pd.DataFrame()
     a = False
